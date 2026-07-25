@@ -1,0 +1,30 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+.next
+coverage
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode
+.idea
+
+# Package managers
+.pnpm-store
+
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
