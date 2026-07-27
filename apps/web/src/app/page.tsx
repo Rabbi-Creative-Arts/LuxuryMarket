@@ -1,24 +1,19 @@
+import Header from "@/components/layout/Header";
+import Hero from "@/components/home/Hero";
+import FeaturedCategories from "@/components/home/FeaturedCategories";
+import FeaturedProducts from "@/components/home/FeaturedProducts";
+import FeaturedVendors from "@/components/home/FeaturedVendors";
+import Footer from "@/components/layout/Footer";
+
 export default function HomePage() {
   return (
-    <main
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        flexDirection: "column",
-        backgroundColor: "#0f172a",
-        color: "white",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <h1 style={{ fontSize: "3rem", marginBottom: "1rem" }}>
-        LuxuryMarket
-      </h1>
-
-      <p style={{ fontSize: "1.2rem" }}>
-        The Future AI-Powered Marketplace
-      </p>
-    </main>
+    <>
+      <Header />
+      <Hero />
+      <FeaturedCategories />
+      <FeaturedProducts />
+      <FeaturedVendors />
+      <Footer />
+    </>
   );
 }

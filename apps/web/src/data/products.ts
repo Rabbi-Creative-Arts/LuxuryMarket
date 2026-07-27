@@ -1,0 +1,33 @@
+export const products = [
+  {
+    id: 1,
+    image: "https://picsum.photos/400?1",
+    title: "iPhone 16 Pro",
+    category: "Smartphones",
+    price: 1199,
+    originalPrice: 1299,
+    rating: 4.9,
+    reviews: 256,
+    badge: "new" as const,
+  },
+  {
+    id: 2,
+    image: "https://picsum.photos/400?2",
+    title: "MacBook Pro M4",
+    category: "Laptops",
+    price: 2499,
+    rating: 4.8,
+    reviews: 142,
+    badge: "bestSeller" as const,
+  },
+  {
+    id: 3,
+    image: "https://picsum.photos/400?3",
+    title: "Sony WH-1000XM6",
+    category: "Audio",
+    price: 449,
+    rating: 4.7,
+    reviews: 98,
+    badge: "sale" as const,
+  },
+];
