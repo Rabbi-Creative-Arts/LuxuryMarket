@@ -40,5 +40,4 @@ export { default as ProductGallery } from "./ProductGallery";
 export { default as CartItem } from "./CartItem";
 export { default as WishlistItem } from "./WishlistItem";
 export { default as OrderCard } from "./OrderCard";
-export { default as VendorCard } from "./VendorCard";
 export { default as UserCard } from "./UserCard";

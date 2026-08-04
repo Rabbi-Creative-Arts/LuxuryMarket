@@ -190,25 +190,37 @@ model Brand {
 
   updatedAt DateTime @updatedAt
 
-  //////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////
   // Relationships
-  //////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////
 
-  users User[]
+users User[]
 
-  contacts BrandContact[]
+contacts BrandContact[]
 
-  applications BrandApplication[]
+applications BrandApplication[]
 
-  documents BrandDocument[]
+documents BrandDocument[]
 
-  integrations BrandIntegration[]
+integrations BrandIntegration[]
 
-  products Product[]
+products Product[]
 
-  @@index([slug])
+dashboard BrandDashboard?
 
-  @@index([status])
+aiInsights AIInsight[]
+
+supportTickets BrandSupportTicket[]
+
+digitalPassports DigitalLuxuryPassport[]
+
+webhookEndpoints WebhookEndpoint[]
+
+erpMappings ERPMapping[]
+
+@@index([slug])
+
+@@index([status])
 }
 
 //////////////////////////////////////////////////////
@@ -774,8 +786,7 @@ model TrackingEvent {
 
   trackingProviderId String
 
-  trackingProvider TrackingProvider
-    @relation(fields: [trackingProviderId], references: [id], onDelete: Cascade)
+  trackingProvider TrackingProvider     @relation(fields: [trackingProviderId], references: [id], onDelete: Cascade)
 
   trackingNumber String
 
@@ -858,8 +869,7 @@ model SyncJob {
 
   brandIntegrationId String
 
-  brandIntegration BrandIntegration
-    @relation(fields: [brandIntegrationId], references: [id], onDelete: Cascade)
+  brandIntegration BrandIntegration     @relation(fields: [brandIntegrationId], references: [id], onDelete: Cascade)
 
   jobType String
 
@@ -900,8 +910,7 @@ model SyncLog {
 
   syncJobId String
 
-  syncJob SyncJob
-    @relation(fields: [syncJobId], references: [id], onDelete: Cascade)
+  syncJob SyncJob     @relation(fields: [syncJobId], references: [id], onDelete: Cascade)
 
   level String
 
@@ -922,8 +931,7 @@ model ProductSyncState {
 
   productId String
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   externalId String?
 
@@ -956,13 +964,11 @@ model AISuggestion {
 
   productId String?
 
-  product Product?
-    @relation(fields: [productId], references: [id])
+  product Product?     @relation(fields: [productId], references: [id])
 
   brandId String?
 
-  brand Brand?
-    @relation(fields: [brandId], references: [id])
+  brand Brand?     @relation(fields: [brandId], references: [id])
 
   type String
 
@@ -1031,11 +1037,9 @@ model RolePermission {
 
   permissionId String
 
-  role Role
-    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  permission Permission
-    @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permission Permission     @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
 
@@ -1094,24 +1098,7 @@ model FeatureFlag {
 // FEATURE FLAG
 //////////////////////////////////////////////////////
 
-model FeatureFlag {
 
-  id String @id @default(cuid())
-
-  name String @unique
-
-  description String?
-
-  enabled Boolean @default(false)
-
-  rolloutPercentage Int @default(100)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([enabled])
-}
 
 //////////////////////////////////////////////////////
 // EXCHANGE RATE
@@ -1125,11 +1112,9 @@ model ExchangeRate {
 
   toCurrencyId String
 
-  fromCurrency Currency
-    @relation("FromCurrency", fields: [fromCurrencyId], references: [id])
+  fromCurrency Currency     @relation("FromCurrency", fields: [fromCurrencyId], references: [id])
 
-  toCurrency Currency
-    @relation("ToCurrency", fields: [toCurrencyId], references: [id])
+  toCurrency Currency     @relation("ToCurrency", fields: [toCurrencyId], references: [id])
 
   rate Decimal @db.Decimal(18,8)
 
@@ -1166,8 +1151,7 @@ model Country {
 
   defaultCurrencyId String
 
-  defaultCurrency Currency
-    @relation(fields: [defaultCurrencyId], references: [id])
+  defaultCurrency Currency     @relation(fields: [defaultCurrencyId], references: [id])
 
   active Boolean @default(true)
 
@@ -1203,23 +1187,19 @@ model UserPreference {
 
   userId String @unique
 
-  user User
-    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   countryId String?
 
-  country Country?
-    @relation(fields: [countryId], references: [id])
+  country Country?     @relation(fields: [countryId], references: [id])
 
   currencyId String?
 
-  currency Currency?
-    @relation(fields: [currencyId], references: [id])
+  currency Currency?     @relation(fields: [currencyId], references: [id])
 
   languageId String?
 
-  language Language?
-    @relation(fields: [languageId], references: [id])
+  language Language?     @relation(fields: [languageId], references: [id])
 
   timezone String?
 
@@ -1240,11 +1220,9 @@ model Wishlist {
 
   productId String
 
-  user User
-    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -1281,11 +1259,9 @@ model ProductReview {
 
   updatedAt DateTime @updatedAt
 
-  user User
-    @relation(fields: [userId], references: [id])
+  user User     @relation(fields: [userId], references: [id])
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   votes ReviewVote[]
 
@@ -1310,11 +1286,9 @@ model ReviewVote {
 
   helpful Boolean
 
-  review ProductReview
-    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  review ProductReview     @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
-  user User
-    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([reviewId, userId])
 }
@@ -1343,11 +1317,9 @@ model AIRecommendation {
 
   createdAt DateTime @default(now())
 
-  user User
-    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 
@@ -1374,14 +1346,11 @@ model ProductView {
 
   viewedAt DateTime @default(now())
 
-  user User?
-    @relation(fields: [userId], references: [id])
+  user User?     @relation(fields: [userId], references: [id])
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  country Country?
-    @relation(fields: [countryId], references: [id])
+  country Country?     @relation(fields: [countryId], references: [id])
 
   @@index([productId])
 
@@ -1410,14 +1379,11 @@ model PriceAlert {
 
   triggeredAt DateTime?
 
-  user User
-    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  currency Currency
-    @relation(fields: [currencyId], references: [id])
+  currency Currency     @relation(fields: [currencyId], references: [id])
 
   @@index([userId])
 
@@ -1436,8 +1402,7 @@ model BrandDashboard {
 
   brandId String @unique
 
-  brand Brand
-    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brand Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
   totalProducts Int @default(0)
 
@@ -1466,8 +1431,7 @@ model ProductAnalytics {
 
   productId String @unique
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   views Int @default(0)
 
@@ -1498,11 +1462,9 @@ model CountryAnalytics {
 
   countryId String
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  country Country
-    @relation(fields: [countryId], references: [id])
+  country Country     @relation(fields: [countryId], references: [id])
 
   views Int @default(0)
 
@@ -1525,8 +1487,7 @@ model TrendingProduct {
 
   productId String @unique
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   score Decimal @db.Decimal(8,4)
 
@@ -1543,8 +1504,7 @@ model AIInsight {
 
   brandId String
 
-  brand Brand
-    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brand Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
   title String
 
@@ -1599,20 +1559,15 @@ model PurchaseVerification {
 
   createdAt DateTime @default(now())
 
-  user User
-    @relation(fields: [userId], references: [id])
+  user User     @relation(fields: [userId], references: [id])
 
-  product Product
-    @relation(fields: [productId], references: [id])
+  product Product     @relation(fields: [productId], references: [id])
 
-  brand Brand
-    @relation(fields: [brandId], references: [id])
+  brand Brand     @relation(fields: [brandId], references: [id])
 
-  partnerOffer PartnerOffer?
-    @relation(fields: [partnerOfferId], references: [id])
+  partnerOffer PartnerOffer?     @relation(fields: [partnerOfferId], references: [id])
 
-  purchaseCurrency Currency
-    @relation(fields: [purchaseCurrencyId], references: [id])
+  purchaseCurrency Currency     @relation(fields: [purchaseCurrencyId], references: [id])
 
   @@index([userId])
 
@@ -1631,8 +1586,7 @@ model Warranty {
 
   purchaseVerificationId String @unique
 
-  purchase PurchaseVerification
-    @relation(fields: [purchaseVerificationId], references: [id], onDelete: Cascade)
+  purchase PurchaseVerification     @relation(fields: [purchaseVerificationId], references: [id], onDelete: Cascade)
 
   warrantyNumber String @unique
 
@@ -1665,11 +1619,9 @@ model LoyaltyReward {
 
   createdAt DateTime @default(now())
 
-  user User
-    @relation(fields: [userId], references: [id])
+  user User     @relation(fields: [userId], references: [id])
 
-  purchase PurchaseVerification?
-    @relation(fields: [purchaseVerificationId], references: [id])
+  purchase PurchaseVerification?     @relation(fields: [purchaseVerificationId], references: [id])
 
   @@index([userId])
 }
@@ -1700,14 +1652,11 @@ model BrandSupportTicket {
 
   updatedAt DateTime @updatedAt
 
-  purchase PurchaseVerification?
-    @relation(fields: [purchaseVerificationId], references: [id])
+  purchase PurchaseVerification?     @relation(fields: [purchaseVerificationId], references: [id])
 
-  user User
-    @relation(fields: [userId], references: [id])
+  user User     @relation(fields: [userId], references: [id])
 
-  brand Brand
-    @relation(fields: [brandId], references: [id])
+  brand Brand     @relation(fields: [brandId], references: [id])
 
   @@index([brandId])
 
@@ -1732,11 +1681,9 @@ model BenefitRedemption {
 
   redeemedAt DateTime?
 
-  purchase PurchaseVerification
-    @relation(fields: [purchaseVerificationId], references: [id])
+  purchase PurchaseVerification     @relation(fields: [purchaseVerificationId], references: [id])
 
-  offer PartnerOffer
-    @relation(fields: [partnerOfferId], references: [id])
+  offer PartnerOffer     @relation(fields: [partnerOfferId], references: [id])
 
   @@index([redeemed])
 }
@@ -1753,23 +1700,19 @@ model DigitalLuxuryPassport {
 
   purchaseVerificationId String @unique
 
-  purchase PurchaseVerification
-    @relation(fields: [purchaseVerificationId], references: [id], onDelete: Cascade)
+  purchase PurchaseVerification     @relation(fields: [purchaseVerificationId], references: [id], onDelete: Cascade)
 
   productId String
 
-  product Product
-    @relation(fields: [productId], references: [id])
+  product Product     @relation(fields: [productId], references: [id])
 
   brandId String
 
-  brand Brand
-    @relation(fields: [brandId], references: [id])
+  brand Brand     @relation(fields: [brandId], references: [id])
 
   currentOwnerId String
 
-  currentOwner User
-    @relation(fields: [currentOwnerId], references: [id])
+  currentOwner User     @relation(fields: [currentOwnerId], references: [id])
 
   active Boolean @default(true)
 
@@ -1788,18 +1731,15 @@ model OwnershipHistory {
 
   passportId String
 
-  passport DigitalLuxuryPassport
-    @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passport DigitalLuxuryPassport     @relation(fields: [passportId], references: [id], onDelete: Cascade)
 
   previousOwnerId String?
 
   newOwnerId String
 
-  previousOwner User?
-    @relation("PreviousOwner", fields: [previousOwnerId], references: [id])
+  previousOwner User?     @relation("PreviousOwner", fields: [previousOwnerId], references: [id])
 
-  newOwner User
-    @relation("NewOwner", fields: [newOwnerId], references: [id])
+  newOwner User     @relation("NewOwner", fields: [newOwnerId], references: [id])
 
   transferDate DateTime
 
@@ -1820,8 +1760,7 @@ model ProductSerialNumber {
 
   passportId String @unique
 
-  passport DigitalLuxuryPassport
-    @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passport DigitalLuxuryPassport     @relation(fields: [passportId], references: [id], onDelete: Cascade)
 
   serialNumber String @unique
 
@@ -1844,8 +1783,7 @@ model ServiceHistory {
 
   passportId String
 
-  passport DigitalLuxuryPassport
-    @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passport DigitalLuxuryPassport     @relation(fields: [passportId], references: [id], onDelete: Cascade)
 
   serviceCenter String
 
@@ -1868,8 +1806,7 @@ model AuthenticityCertificate {
 
   passportId String @unique
 
-  passport DigitalLuxuryPassport
-    @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passport DigitalLuxuryPassport     @relation(fields: [passportId], references: [id], onDelete: Cascade)
 
   certificateNumber String @unique
 
@@ -1894,8 +1831,7 @@ model BrandApiCredential {
 
   brandIntegrationId String @unique
 
-  integration BrandIntegration
-    @relation(fields: [brandIntegrationId], references: [id], onDelete: Cascade)
+  integration BrandIntegration     @relation(fields: [brandIntegrationId], references: [id], onDelete: Cascade)
 
   authenticationType String
 
@@ -1924,8 +1860,7 @@ model WebhookEndpoint {
 
   brandId String
 
-  brand Brand
-    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brand Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
   event String
 
@@ -1952,8 +1887,7 @@ model InventorySync {
 
   productId String
 
-  product Product
-    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   available Boolean
 
@@ -1984,11 +1918,9 @@ model ERPMapping {
 
   erpSystem String
 
-  brand Brand
-    @relation(fields: [brandId], references: [id])
+  brand Brand     @relation(fields: [brandId], references: [id])
 
-  product Product
-    @relation(fields: [productId], references: [id])
+  product Product     @relation(fields: [productId], references: [id])
 
   @@unique([brandId, externalProductId])
 
@@ -2005,8 +1937,7 @@ model ApiRequestLog {
 
   brandIntegrationId String
 
-  integration BrandIntegration
-    @relation(fields: [brandIntegrationId], references: [id])
+  integration BrandIntegration     @relation(fields: [brandIntegrationId], references: [id])
 
   endpoint String
 
@@ -2035,8 +1966,7 @@ model ApiRateLimit {
 
   brandIntegrationId String
 
-  integration BrandIntegration
-    @relation(fields: [brandIntegrationId], references: [id])
+  integration BrandIntegration     @relation(fields: [brandIntegrationId], references: [id])
 
   requestsPerMinute Int
 
@@ -2082,8 +2012,7 @@ model AITask {
 
   agentId String
 
-  agent AIAgent
-    @relation(fields: [agentId], references: [id])
+  agent AIAgent     @relation(fields: [agentId], references: [id])
 
   taskType String
 
@@ -2145,8 +2074,7 @@ model AIConversation {
 
   updatedAt DateTime @updatedAt
 
-  user User?
-    @relation(fields: [userId], references: [id])
+  user User?     @relation(fields: [userId], references: [id])
 
   messages AIMessage[]
 }
@@ -2161,8 +2089,7 @@ model AIMessage {
 
   conversationId String
 
-  conversation AIConversation
-    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversation AIConversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   role String
 
@@ -2197,11 +2124,9 @@ model AIDecision {
 
   createdAt DateTime @default(now())
 
-  agent AIAgent
-    @relation(fields: [agentId], references: [id])
+  agent AIAgent     @relation(fields: [agentId], references: [id])
 
-  task AITask?
-    @relation(fields: [taskId], references: [id])
+  task AITask?     @relation(fields: [taskId], references: [id])
 
   @@index([agentId])
 }
@@ -2226,8 +2151,7 @@ model LuxuryCollection {
 
   updatedAt DateTime @updatedAt
 
-  user User
-    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   passports DigitalLuxuryPassport[]
 }
@@ -2258,8 +2182,7 @@ model ConciergeRequest {
 
   updatedAt DateTime @updatedAt
 
-  user User
-    @relation(fields: [userId], references: [id])
+  user User     @relation(fields: [userId], references: [id])
 
 }
 
@@ -2285,8 +2208,7 @@ model InsurancePolicy {
 
   active Boolean @default(true)
 
-  passport DigitalLuxuryPassport
-    @relation(fields: [passportId], references: [id])
+  passport DigitalLuxuryPassport     @relation(fields: [passportId], references: [id])
 
 }
 
@@ -2314,8 +2236,7 @@ model LuxuryEvent {
 
   createdAt DateTime @default(now())
 
-  brand Brand
-    @relation(fields: [brandId], references: [id])
+  brand Brand     @relation(fields: [brandId], references: [id])
 
 }
 
@@ -2337,11 +2258,9 @@ model EventInvitation {
 
   respondedAt DateTime?
 
-  event LuxuryEvent
-    @relation(fields: [eventId], references: [id])
+  event LuxuryEvent     @relation(fields: [eventId], references: [id])
 
-  user User
-    @relation(fields: [userId], references: [id])
+  user User     @relation(fields: [userId], references: [id])
 
   @@unique([eventId, userId])
 }
@@ -2368,14 +2287,11 @@ model ResaleListing {
 
   createdAt DateTime @default(now())
 
-  passport DigitalLuxuryPassport
-    @relation(fields: [passportId], references: [id])
+  passport DigitalLuxuryPassport     @relation(fields: [passportId], references: [id])
 
-  seller User
-    @relation(fields: [sellerId], references: [id])
+  seller User     @relation(fields: [sellerId], references: [id])
 
-  currency Currency
-    @relation(fields: [currencyId], references: [id])
+  currency Currency     @relation(fields: [currencyId], references: [id])
 
 }
 
@@ -2483,8 +2399,7 @@ model StoredFile {
 
   uploadedAt DateTime @default(now())
 
-  uploadedBy User?
-    @relation(fields: [uploadedById], references: [id])
+  uploadedBy User?     @relation(fields: [uploadedById], references: [id])
 }
 
 //////////////////////////////////////////////////////
@@ -2528,8 +2443,7 @@ model ApiKey {
 
   createdAt DateTime @default(now())
 
-  owner User?
-    @relation(fields: [ownerId], references: [id])
+  owner User?     @relation(fields: [ownerId], references: [id])
 }
 
 //////////////////////////////////////////////////////
@@ -2571,10 +2485,29 @@ model WebhookDelivery {
 
   attemptedAt DateTime @default(now())
 
-  webhookEndpoint WebhookEndpoint
-    @relation(fields: [webhookEndpointId], references: [id], onDelete: Cascade)
+  webhookEndpoint WebhookEndpoint     @relation(fields: [webhookEndpointId], references: [id], onDelete: Cascade)
 
   @@index([delivered])
 
   @@index([eventType])
+}
+
+model Currency {
+  id        String   @id @default(cuid())
+
+  code      String   @unique
+  name      String
+  symbol    String?
+
+  countries Country[]
+
+  fromExchangeRates ExchangeRate[] @relation("FromCurrency")
+  toExchangeRates   ExchangeRate[] @relation("ToCurrency")
+
+  products          Product[]
+  priceHistory      PriceHistory[]
+  countriesDefault  Country[] @relation("CountryDefaultCurrency")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
