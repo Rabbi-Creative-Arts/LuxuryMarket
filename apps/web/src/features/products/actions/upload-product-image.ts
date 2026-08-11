@@ -17,6 +17,14 @@ export async function uploadProductImage(
   formData: FormData
 ): Promise<UploadImageState> {
   try {
+    if (!productId) {
+      return {
+        success: false,
+        message:
+          "Product ID is required.",
+      };
+    }
+
     const file = formData.get("image");
 
     if (!(file instanceof File)) {
@@ -26,47 +34,69 @@ export async function uploadProductImage(
       };
     }
 
-    const result = await UploadService.uploadProductImage(file);
+    // Upload physical file.
+    const result =
+      await UploadService.uploadProductImage(
+        file
+      );
 
     if (!result.success || !result.url) {
       return {
         success: false,
-        message: result.error ?? "Image upload failed.",
+        message:
+          result.error ??
+          "Image upload failed.",
       };
     }
 
-    const imageCount = await prisma.productImage.count({
-      where: {
-        productId,
-      },
-    });
+    // Find the current highest image order.
+    const highestOrder =
+      await prisma.productImage.aggregate({
+        where: {
+          productId,
+        },
+        _max: {
+          sortOrder: true,
+        },
+      });
 
+    const nextSortOrder =
+      (highestOrder._max.sortOrder ?? -1) +
+      1;
+
+    // Save image record.
     await prisma.productImage.create({
       data: {
         productId,
-
         url: result.url,
-
-        position: imageCount,
-
         alt: "",
+        sortOrder: nextSortOrder,
       },
     });
 
-    revalidatePath(`/dashboard/products/${productId}`);
-    revalidatePath(`/products`);
+    // Refresh pages.
+    revalidatePath(
+      `/admin/products/${productId}/edit`
+    );
+
+    revalidatePath("/admin/products");
 
     return {
       success: true,
-      message: "Image uploaded successfully.",
+      message:
+        "Image uploaded successfully.",
       imageUrl: result.url,
     };
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Product image upload error:",
+      error
+    );
 
     return {
       success: false,
-      message: "Unexpected error while uploading image.",
+      message:
+        "Unexpected error while uploading image.",
     };
   }
 }

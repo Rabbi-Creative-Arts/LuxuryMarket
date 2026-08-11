@@ -1,20 +1,28 @@
 import Link from "next/link";
 
+import { siteConfig } from "@/config/site";
+
 export default function Footer() {
   return (
-    <footer className="border-t bg-gray-50">
+    <footer className="mt-20 border-t bg-gray-50">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-4">
+
+        {/* Brand */}
         <div>
           <h2 className="text-2xl font-bold">
-            LuxuryMarket
+            {siteConfig.logoText}
           </h2>
 
+          <p className="mt-2 text-sm font-medium uppercase tracking-[0.2em] text-gray-500">
+            {siteConfig.slogan}
+          </p>
+
           <p className="mt-4 text-sm text-gray-600">
-            Discover trusted brands, premium products,
-            and verified vendors from around the world.
+            {siteConfig.description}
           </p>
         </div>
 
+        {/* Marketplace */}
         <div>
           <h3 className="mb-4 font-semibold">
             Marketplace
@@ -30,9 +38,7 @@ export default function Footer() {
             </li>
 
             <li>
-              <Link href="/categories">
-                Categories
-              </Link>
+              <Link href="/categories">Categories</Link>
             </li>
 
             <li>
@@ -41,6 +47,7 @@ export default function Footer() {
           </ul>
         </div>
 
+        {/* Company */}
         <div>
           <h3 className="mb-4 font-semibold">
             Company
@@ -65,6 +72,7 @@ export default function Footer() {
           </ul>
         </div>
 
+        {/* Support */}
         <div>
           <h3 className="mb-4 font-semibold">
             Support
@@ -76,15 +84,11 @@ export default function Footer() {
             </li>
 
             <li>
-              <Link href="/shipping">
-                Shipping
-              </Link>
+              <Link href="/shipping">Shipping</Link>
             </li>
 
             <li>
-              <Link href="/returns">
-                Returns
-              </Link>
+              <Link href="/returns">Returns</Link>
             </li>
 
             <li>
@@ -92,11 +96,11 @@ export default function Footer() {
             </li>
           </ul>
         </div>
+
       </div>
 
       <div className="border-t py-6 text-center text-sm text-gray-500">
-        © {new Date().getFullYear()} LuxuryMarket.
-        All rights reserved.
+        {siteConfig.copyright}
       </div>
     </footer>
   );

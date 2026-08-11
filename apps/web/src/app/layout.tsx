@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import AppLayout from "@/components/layout/AppLayout";
+import { siteConfig } from "@/config/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LuxuryMarket",
-  description: "Premium Marketplace",
+  title: siteConfig.name,
+  description: siteConfig.description,
 };
 
 interface RootLayoutProps {
@@ -32,7 +33,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppLayout>{children}</AppLayout>
+        <AppLayout>
+          {children}
+        </AppLayout>
       </body>
     </html>
   );

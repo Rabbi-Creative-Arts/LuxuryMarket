@@ -6,7 +6,7 @@ export default function PromoBanner() {
       </h2>
 
       <p className="mt-5 text-lg text-gray-300">
-        Thousands of premium products from trusted vendors.
+        Thousands of premium products from trusted brands.
       </p>
     </section>
   );

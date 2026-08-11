@@ -54,6 +54,8 @@ export class CategoryService {
     });
   }
 
+  // Used by the Admin Categories page.
+  // Includes products because that page displays product counts.
   async getAll() {
     return prisma.category.findMany({
       orderBy: {
@@ -61,6 +63,20 @@ export class CategoryService {
       },
       include: {
         products: true,
+      },
+    });
+  }
+
+  // Lightweight version for dropdowns/forms.
+  // Does NOT load products.
+  async getAllForSelect() {
+    return prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: "asc",
       },
     });
   }

@@ -11,10 +11,10 @@ export async function getDashboard(): Promise<DashboardStats> {
     pendingApplications,
   ] = await Promise.all([
     prisma.user.count(),
-    prisma.vendor.count(),
+    prisma.brand.count(),
     prisma.product.count(),
     prisma.category.count(),
-    prisma.vendor.count(),
+    prisma.brand.count(),
   ]);
 
   return {

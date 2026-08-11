@@ -18,7 +18,9 @@ export interface UploadResult {
 }
 
 export class UploadService {
-  static async uploadProductImage(file: File): Promise<UploadResult> {
+  static async uploadProductImage(
+    file: File
+  ): Promise<UploadResult> {
     if (!file) {
       return {
         success: false,
@@ -29,7 +31,8 @@ export class UploadService {
     if (!ALLOWED_TYPES.includes(file.type)) {
       return {
         success: false,
-        error: "Unsupported image type.",
+        error:
+          "Unsupported image type. Only JPG, JPEG, PNG, and WebP are allowed.",
       };
     }
 
@@ -44,7 +47,8 @@ export class UploadService {
 
     const buffer = Buffer.from(bytes);
 
-    const extension = path.extname(file.name);
+    const extension =
+      path.extname(file.name).toLowerCase() || ".jpg";
 
     const filename = `${randomUUID()}${extension}`;
 
@@ -59,7 +63,10 @@ export class UploadService {
       recursive: true,
     });
 
-    const filepath = path.join(uploadDirectory, filename);
+    const filepath = path.join(
+      uploadDirectory,
+      filename
+    );
 
     await writeFile(filepath, buffer);
 

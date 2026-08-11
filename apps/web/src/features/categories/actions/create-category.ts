@@ -1,42 +1,31 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-import { categorySchema } from "../schemas/category.schema";
 import { categoryService } from "../services/category.service";
 
 export async function createCategory(formData: FormData) {
-  try {
-    const rawData = {
-      name: formData.get("name"),
-      slug: formData.get("slug"),
-      description: formData.get("description"),
-    };
+  const name = formData.get("name")?.toString().trim() ?? "";
+  const slug = formData.get("slug")?.toString().trim() ?? "";
+  const description =
+    formData.get("description")?.toString().trim() ?? "";
 
-    const data = categorySchema.parse({
-      ...rawData,
-      description:
-        rawData.description === "" ? null : rawData.description,
-    });
-
-    const category = await categoryService.create(data);
-
-    revalidatePath("/dashboard/categories");
-
-    return {
-      success: true,
-      message: "Category created successfully.",
-      data: category,
-    };
-  } catch (error) {
-    console.error("Create Category Error:", error);
-
-    return {
-      success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Failed to create category.",
-    };
+  if (!name) {
+    throw new Error("Category name is required.");
   }
+
+  if (!slug) {
+    throw new Error("Category slug is required.");
+  }
+
+  await categoryService.create({
+    name,
+    slug,
+    description,
+  });
+
+  revalidatePath("/admin/categories");
+
+  redirect("/admin/categories");
 }

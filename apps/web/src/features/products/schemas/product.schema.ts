@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ProductStatus } from "@prisma/client";
 
 export const productSchema = z.object({
   name: z
@@ -50,12 +51,7 @@ export const productSchema = z.object({
 
   featured: z.boolean(),
 
-  status: z.enum([
-    "DRAFT",
-    "ACTIVE",
-    "OUT_OF_STOCK",
-    "ARCHIVED",
-  ]),
+  status: z.nativeEnum(ProductStatus),
 });
 
 export type ProductSchema = z.infer<typeof productSchema>;

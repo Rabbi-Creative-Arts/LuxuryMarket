@@ -12,7 +12,7 @@ export default function SearchBar() {
 
       <input
         type="search"
-        placeholder="Search products, brands, vendors..."
+        placeholder="Search products, brands,"
         className="h-11 w-full rounded-xl border border-gray-300 bg-white pl-11 pr-4 text-sm outline-none transition focus:border-black"
       />
     </div>

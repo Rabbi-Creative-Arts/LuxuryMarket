@@ -2,7 +2,7 @@ const features = [
   {
     title: "Verified Brands",
     description:
-      "Shop confidently from trusted brands and verified vendors offering authentic products.",
+      "Shop confidently from trusted brands and verified brands offering authentic products.",
   },
   {
     title: "Secure Payments",
@@ -35,7 +35,7 @@ export default function WhyLuxuryMarket() {
           </h2>
 
           <p className="mx-auto mt-5 max-w-3xl text-lg text-gray-300">
-            We combine trusted brands, verified vendors, secure technology, and
+            We combine trusted brands, secure technology, and
             excellent customer service to create a premium shopping experience.
           </p>
         </div>

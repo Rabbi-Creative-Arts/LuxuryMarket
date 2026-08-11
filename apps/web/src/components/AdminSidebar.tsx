@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { siteConfig } from "@/config/site";
+
 const navigation = [
   { name: "Dashboard", href: "/admin" },
   { name: "Brands", href: "/admin/brands" },
@@ -21,17 +23,20 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex min-h-screen w-72 flex-col border-r border-gray-200 bg-white">
-      <div className="border-b border-gray-200 p-6">
-        <h1 className="text-2xl font-bold">
-          LuxuryMarket
-        </h1>
+    <aside className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
 
-        <p className="mt-1 text-sm text-gray-500">
-          Administrator
+      {/* Brand */}
+      <div className="border-b border-gray-200 p-6">
+        <h2 className="text-3xl font-bold tracking-tight">
+          {siteConfig.logoText}
+        </h2>
+
+        <p className="mt-2 text-xs font-medium uppercase tracking-[0.2em] text-gray-500">
+          ADMIN CENTER
         </p>
       </div>
 
+      {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
         {navigation.map((item) => {
           const active =
@@ -54,9 +59,11 @@ export default function AdminSidebar() {
         })}
       </nav>
 
+      {/* Footer */}
       <div className="border-t border-gray-200 p-4 text-sm text-gray-500">
-        LuxuryMarket Admin v1
+        {siteConfig.logoText} Admin v1.0
       </div>
+
     </aside>
   );
 }

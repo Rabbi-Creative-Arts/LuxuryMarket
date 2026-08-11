@@ -1,69 +1,114 @@
 "use server";
 
+import { Prisma, ProductStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-import { productSchema } from "../schemas/product.schema";
-import { ProductService } from "../services/product.service";
+import { productService } from "../services/product.service";
 
-export interface CreateProductState {
-  success: boolean;
-  message: string;
-  errors?: Record<string, string[]>;
-}
+export async function createProduct(formData: FormData) {
+  const name =
+    formData.get("name")?.toString().trim() ?? "";
 
-export async function createProduct(
-  _: CreateProductState,
-  formData: FormData
-): Promise<CreateProductState> {
-  const rawData = {
-    name: formData.get("name"),
-    slug: formData.get("slug"),
-    sku: formData.get("sku"),
+  const slug =
+    formData.get("slug")?.toString().trim() ?? "";
 
-    description: formData.get("description"),
-    shortDescription: formData.get("shortDescription"),
+  const sku =
+    formData.get("sku")?.toString().trim() ?? "";
 
-    price: Number(formData.get("price")),
+  const description =
+    formData.get("description")?.toString().trim() ?? "";
 
-    quantity: Number(formData.get("quantity")),
+  const brandId =
+    formData.get("brandId")?.toString() ?? "";
 
-    categoryId: formData.get("categoryId"),
+  const categoryId =
+    formData.get("categoryId")?.toString() ?? "";
 
-    featured: formData.get("featured") === "true",
+  const price = Number(
+    formData.get("price")
+  );
 
-    status: formData.get("status"),
-  };
+  const featured =
+    formData.get("featured") === "on";
 
-  const validated = productSchema.safeParse(rawData);
+  const status =
+    (formData.get("status")?.toString() as ProductStatus) ??
+    ProductStatus.DRAFT;
 
-  if (!validated.success) {
-    return {
-      success: false,
-      message: "Validation failed.",
+  // ============================================
+  // Affiliate Fields
+  // ============================================
 
-      errors: validated.error.flatten().fieldErrors,
-    };
+  const affiliateUrl =
+    formData.get("affiliateUrl")?.toString().trim() ?? "";
+
+  const buyButtonText =
+    formData.get("buyButtonText")?.toString().trim() ??
+    "Buy on Official Brand Website";
+
+  // ============================================
+  // Validation
+  // ============================================
+
+  if (!name) {
+    throw new Error("Product name is required.");
   }
 
-  /**
-   * Temporary Vendor
-   *
-   * Later we'll obtain this from
-   * the authenticated vendor session.
-   */
-  const vendorId = "REPLACE_WITH_VENDOR_ID";
+  if (!slug) {
+    throw new Error("Slug is required.");
+  }
 
-  await ProductService.create({
-    ...validated.data,
+  if (!sku) {
+    throw new Error("SKU is required.");
+  }
 
-    vendorId,
+  if (!brandId) {
+    throw new Error("Brand is required.");
+  }
+
+  if (!categoryId) {
+    throw new Error("Category is required.");
+  }
+
+  if (Number.isNaN(price)) {
+    throw new Error("Invalid price.");
+  }
+
+  // ============================================
+  // Create Product
+  // ============================================
+
+  await productService.create({
+    name,
+    slug,
+    sku,
+    description,
+
+    price: new Prisma.Decimal(price),
+
+    status,
+
+    featured,
+
+    affiliateUrl,
+
+    buyButtonText,
+
+    brand: {
+      connect: {
+        id: brandId,
+      },
+    },
+
+    category: {
+      connect: {
+        id: categoryId,
+      },
+    },
   });
 
-  revalidatePath("/dashboard/products");
+  revalidatePath("/admin/products");
 
-  return {
-    success: true,
-
-    message: "Product created successfully.",
-  };
+  redirect("/admin/products");
 }

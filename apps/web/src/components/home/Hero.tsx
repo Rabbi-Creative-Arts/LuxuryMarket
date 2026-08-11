@@ -27,7 +27,7 @@ export default function Hero() {
           </Link>
 
           <Link
-            href="/vendors/register"
+            href="/brands/register"
             className="rounded-xl border border-white px-8 py-4 text-lg font-semibold transition hover:bg-white hover:text-black"
           >
             {hero.secondaryButton}
@@ -52,7 +52,8 @@ export default function Hero() {
           <div>
             <h2 className="text-4xl font-bold">100+</h2>
             <p className="mt-2 text-gray-300">
-              Vendors
+              Verified Brands
+
             </p>
           </div>
 
