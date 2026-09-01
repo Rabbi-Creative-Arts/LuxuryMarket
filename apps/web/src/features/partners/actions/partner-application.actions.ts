@@ -28,7 +28,10 @@ async function requireAdmin() {
     );
   }
 
-  if (user.role !== "ADMIN") {
+  if (
+    user.role !== "ADMIN" &&
+    user.role !== "SUPER_ADMIN"
+  ) {
     throw new Error(
       "Administrator access required."
     );
@@ -60,6 +63,48 @@ export async function updatePartnerApplicationStatus(
     );
   }
 
+  // ----------------------------------------
+  // Approval has its own complete workflow.
+  // ----------------------------------------
+
+  if (status === "APPROVED") {
+    const result =
+      await partnerApplicationService.approveApplication(
+        applicationId,
+        adminId,
+        reviewerNotes
+      );
+
+    revalidatePath(
+      "/admin/partners/applications"
+    );
+
+    revalidatePath(
+      "/admin/brands"
+    );
+
+    revalidatePath(
+      "/admin"
+    );
+
+    return {
+      success: true,
+
+      message:
+        "Brand application approved and Brand account created.",
+
+      brandId:
+        result.brand.id,
+
+      userId:
+        result.userId,
+    };
+  }
+
+  // ----------------------------------------
+  // Other status changes
+  // ----------------------------------------
+
   await partnerApplicationService.updateStatus(
     applicationId,
     status,
@@ -73,8 +118,9 @@ export async function updatePartnerApplicationStatus(
 
   return {
     success: true,
+
     message:
-      "Partner application updated successfully.",
+      "Brand application updated successfully.",
   };
 }
 

@@ -1,0 +1,1333 @@
+////////////////////////////////////////////////////
+//
+// LuxuryMarket Database v2.0
+//
+// Enterprise AI Marketplace
+//
+////////////////////////////////////////////////////
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+////////////////////////////////////////////////////
+// PAYMENT ATTEMPTS
+////////////////////////////////////////////////////
+
+model PaymentAttempt {
+  id String @id @default(cuid())
+
+  paymentId String
+
+  attemptNumber Int
+
+  amount Decimal @db.Decimal(12, 2)
+
+  status PaymentStatus @default(PENDING)
+
+  provider String?
+
+  providerReference String?
+
+  failureReason String?
+
+  attemptedAt DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([paymentId, attemptNumber])
+  @@index([paymentId])
+  @@index([status])
+  @@index([providerReference])
+}
+
+////////////////////////////////////////////////////
+// REFUNDS
+////////////////////////////////////////////////////
+
+model Refund {
+  id String @id @default(cuid())
+
+  paymentId String
+
+  amount Decimal @db.Decimal(12, 2)
+
+  reason String?
+
+  providerReference String?
+
+  status RefundStatus @default(PENDING)
+
+  processedAt DateTime?
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentId])
+  @@index([status])
+  @@index([providerReference])
+}
+
+////////////////////////////////////////////////////
+// RECEIPTS
+////////////////////////////////////////////////////
+
+model Receipt {
+  id String @id @default(cuid())
+
+  paymentId String @unique
+
+  receiptNumber String @unique
+
+  issuedAt DateTime @default(now())
+
+  pdfUrl String?
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MARKETPLACE SETTINGS
+////////////////////////////////////////////////////
+
+model MarketplaceSettings {
+  id String @id @default(cuid())
+
+  // Current marketplace commission chosen by Admin.
+  // This is configurable and is not fixed at 10%.
+  commissionRate Decimal @default(0) @db.Decimal(5, 2)
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum UserRole {
+  CUSTOMER
+  BRAND_OWNER
+  BRAND_STAFF
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum BrandStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  OUT_OF_STOCK
+  DISCONTINUED
+}
+
+enum PartnerType {
+  PERSONAL
+  POPULAR
+}
+
+enum PartnerApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model User {
+  id String @id @default(cuid())
+
+  email String @unique
+
+  password String
+
+  firstName String
+
+  lastName String?
+
+  phone String?
+
+  avatar String?
+
+  emailVerified Boolean @default(false)
+
+  role UserRole @default(CUSTOMER)
+
+  active Boolean @default(true)
+
+  brands Brand[]
+
+  brandMemberships BrandMember[]
+
+  cart Cart?
+
+  wishlist Wishlist[]
+
+  reviews ProductReview[]
+
+  questions ProductQuestion[]
+
+  orders Order[]
+
+  addresses Address[]
+
+  aiTasks AITask[]
+
+  aiConversations AIConversation[]
+
+  passports DigitalLuxuryPassport[]
+
+  partnerApplications PartnerApplication[]
+
+  auditLogs AuditLog[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Brand {
+  id String @id @default(cuid())
+
+  name String
+
+  slug String @unique
+
+  description String?
+
+  logo String?
+
+  coverImage String?
+
+  website String?
+
+  email String?
+
+  phone String?
+
+  country String?
+
+  status BrandStatus @default(PENDING)
+
+  verified Boolean @default(false)
+
+  featured Boolean @default(false)
+
+  ownerId String?
+
+  owner User? @relation(fields: [ownerId], references: [id])
+
+  products Product[]
+
+  contacts BrandContact[]
+
+  documents BrandDocument[]
+
+  dashboard BrandDashboard?
+
+  members BrandMember[]
+
+  invitations BrandInvitation[]
+
+  webhooks WebhookEndpoint[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([status])
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Category {
+  id String @id @default(cuid())
+
+  name String
+  slug String @unique
+
+  description String?
+
+  active Boolean @default(true)
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model ProductImage {
+  id String @id @default(cuid())
+
+  productId String
+
+  url String
+
+  alt String?
+
+  sortOrder Int @default(0)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model ProductVariant {
+  id String @id @default(cuid())
+
+  productId String
+
+  name String
+
+  sku String @unique
+
+  price Decimal @db.Decimal(12, 2)
+
+  stock Int @default(0)
+
+  active Boolean @default(true)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Inventory {
+  id String @id @default(cuid())
+
+  productId String @unique
+
+  quantity Int @default(0)
+
+  reserved Int @default(0)
+
+  reorderLevel Int @default(10)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model ProductAttribute {
+  id String @id @default(cuid())
+
+  productId String
+
+  name String
+
+  value String
+
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Product {
+  id String @id @default(cuid())
+
+  name String
+
+  slug String @unique
+
+  description String?
+
+  sku String @unique
+
+  price Decimal @db.Decimal(12, 2)
+
+  status ProductStatus @default(DRAFT)
+
+  featured Boolean @default(false)
+
+  affiliateUrl String?
+
+  buyButtonText String? @default("Buy on Official Brand Website")
+
+  brandId String
+
+  categoryId String
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  images ProductImage[]
+
+  variants ProductVariant[]
+
+  inventory Inventory?
+
+  attributes ProductAttribute[]
+
+  tags ProductTag[]
+
+  reviews ProductReview[]
+
+  questions ProductQuestion[]
+
+  cartItems CartItem[]
+
+  wishlistItems Wishlist[]
+
+  orderItems OrderItem[]
+
+  passport DigitalLuxuryPassport?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([sku])
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model BrandApplication {
+  id String @id @default(cuid())
+
+  brandName String
+
+  applicant String
+
+  email String
+
+  phone String?
+
+  website String?
+
+  message String?
+
+  status BrandStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// PARTNER APPLICATION
+////////////////////////////////////////////////////
+
+model PartnerApplication {
+  id String @id @default(cuid())
+
+  userId String? @unique
+
+  user User? @relation(fields: [userId], references: [id])
+
+  partnerType PartnerType
+  status      PartnerApplicationStatus @default(PENDING)
+
+  businessName String
+  brandName    String
+  email        String
+  companyEmail String?
+  phone        String
+
+  firstName String
+  lastName  String
+  position  String?
+
+  website     String?
+  description String
+  productType String
+
+  country String
+  city    String
+
+  purchaseUrl           String?
+  affiliateNetwork      String?
+  commissionInformation String?
+
+  reviewerNotes String?
+  reviewedById  String?
+  submittedAt   DateTime  @default(now())
+  reviewedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([partnerType])
+  @@index([status])
+  @@index([email])
+  @@index([brandName])
+  @@index([submittedAt])
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model BrandContact {
+  id String @id @default(cuid())
+
+  brandId String
+
+  firstName String
+
+  lastName String?
+
+  email String
+
+  phone String?
+
+  jobTitle String?
+
+  primary Boolean @default(false)
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model BrandDocument {
+  id String @id @default(cuid())
+
+  brandId String
+
+  name String
+
+  fileUrl String
+
+  verified Boolean @default(false)
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Cart {
+  id String @id @default(cuid())
+
+  userId String @unique
+
+  user User @relation(fields: [userId], references: [id])
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model CartItem {
+  id String @id @default(cuid())
+
+  cartId String
+
+  productId String
+
+  quantity Int @default(1)
+
+  cart Cart @relation(fields: [cartId], references: [id])
+
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Wishlist {
+  id String @id @default(cuid())
+
+  userId String
+
+  productId String
+
+  user User @relation(fields: [userId], references: [id])
+
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model ProductTag {
+  id String @id @default(cuid())
+
+  name String @unique
+
+  slug String @unique
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model ProductReview {
+  id String @id @default(cuid())
+
+  productId String
+
+  userId String
+
+  rating Int
+
+  title String?
+
+  review String?
+
+  verified Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model ProductQuestion {
+  id String @id @default(cuid())
+
+  productId String
+
+  userId String
+
+  question String
+
+  answer String?
+
+  answered Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Order {
+  id String @id @default(cuid())
+
+  orderNumber String @unique
+
+  userId String
+
+  subtotal Decimal @db.Decimal(12, 2)
+
+  shipping Decimal @default(0) @db.Decimal(12, 2)
+
+  tax Decimal @default(0) @db.Decimal(12, 2)
+
+  discount Decimal @default(0) @db.Decimal(12, 2)
+
+  total Decimal @db.Decimal(12, 2)
+
+  // Snapshot of the marketplace commission actually used for this order.
+  // This preserves historical transactions when Admin changes the current rate.
+  marketplaceCommissionRate Decimal @default(0) @db.Decimal(5, 2)
+
+  marketplaceCommissionAmount Decimal @default(0) @db.Decimal(12, 2)
+
+  status OrderStatus @default(PENDING)
+
+  paymentStatus PaymentStatus @default(PENDING)
+
+  user User @relation(fields: [userId], references: [id])
+
+  items OrderItem[]
+
+  payments Payment[]
+
+  shipments Shipment[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([orderNumber])
+  @@index([status])
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  orderId String
+
+  productId String
+
+  quantity Int
+
+  unitPrice Decimal @db.Decimal(12, 2)
+
+  total Decimal @db.Decimal(12, 2)
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Payment {
+  id String @id @default(cuid())
+
+  orderId String
+
+  amount Decimal @db.Decimal(12, 2)
+
+  method PaymentMethod
+
+  status PaymentStatus @default(PENDING)
+
+  transactionId String?
+
+  provider String?
+
+  providerReference String?
+
+  currency String @default("NGN")
+
+  processingFee Decimal @default(0) @db.Decimal(12, 2)
+
+  netAmount Decimal @default(0) @db.Decimal(12, 2)
+
+  failureReason String?
+
+  paidAt DateTime?
+
+  reconciled Boolean @default(false)
+
+  reconciledAt DateTime?
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  attempts PaymentAttempt[]
+
+  refunds Refund[]
+
+  receipt Receipt?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([transactionId])
+  @@index([providerReference])
+  @@index([status])
+  @@index([reconciled])
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  PAYSTACK
+  FLUTTERWAVE
+  STRIPE
+  PAYPAL
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Address {
+  id String @id @default(cuid())
+
+  userId String
+
+  firstName String
+
+  lastName String
+
+  company String?
+
+  phone String
+
+  addressLine1 String
+
+  addressLine2 String?
+
+  city String
+
+  state String
+
+  postalCode String
+
+  country String
+
+  isDefault Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id])
+
+  shipments Shipment[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Shipment {
+  id String @id @default(cuid())
+
+  orderId String
+
+  addressId String
+
+  trackingNumber String? @unique
+
+  carrier String?
+
+  status ShipmentStatus @default(PENDING)
+
+  estimatedDelivery DateTime?
+
+  deliveredAt DateTime?
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  address Address @relation(fields: [addressId], references: [id])
+
+  trackingEvents ShipmentTracking[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model ShipmentTracking {
+  id String @id @default(cuid())
+
+  shipmentId String
+
+  status String
+
+  location String?
+
+  description String?
+
+  eventTime DateTime
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum ShipmentStatus {
+  PENDING
+  PACKING
+  READY_FOR_PICKUP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model BrandDashboard {
+  id String @id @default(cuid())
+
+  brandId String @unique
+
+  totalProducts Int @default(0)
+
+  totalOrders Int @default(0)
+
+  totalRevenue Decimal @default(0) @db.Decimal(14, 2)
+
+  totalCustomers Int @default(0)
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model BrandMember {
+  id String @id @default(cuid())
+
+  brandId String
+
+  userId String
+
+  role BrandMemberRole
+
+  active Boolean @default(true)
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([brandId, userId])
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model BrandInvitation {
+  id String @id @default(cuid())
+
+  brandId String
+
+  email String
+
+  role BrandMemberRole
+
+  token String @unique
+
+  accepted Boolean @default(false)
+
+  expiresAt DateTime
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum BrandMemberRole {
+  OWNER
+  ADMIN
+  PRODUCT_MANAGER
+  ORDER_MANAGER
+  SUPPORT
+  ANALYST
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model AIAgent {
+  id String @id @default(cuid())
+
+  name String
+
+  slug String @unique
+
+  description String?
+
+  active Boolean @default(true)
+
+  systemPrompt String
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  tasks AITask[]
+
+  conversations AIConversation[]
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model AITask {
+  id String @id @default(cuid())
+
+  agentId String
+
+  userId String?
+
+  title String
+
+  description String?
+
+  status AITaskStatus @default(PENDING)
+
+  startedAt DateTime?
+
+  completedAt DateTime?
+
+  agent AIAgent @relation(fields: [agentId], references: [id])
+
+  user User? @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model AIConversation {
+  id String @id @default(cuid())
+
+  agentId String
+
+  userId String?
+
+  title String?
+
+  model String?
+
+  tokensUsed Int @default(0)
+
+  agent AIAgent @relation(fields: [agentId], references: [id])
+
+  user User? @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum AITaskStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model DigitalLuxuryPassport {
+  id String @id @default(cuid())
+
+  passportNumber String @unique
+
+  productId String @unique
+
+  ownerId String?
+
+  authenticationStatus PassportStatus @default(PENDING)
+
+  issueDate DateTime?
+
+  expiryDate DateTime?
+
+  qrCode String?
+
+  nftReference String?
+
+  product Product @relation(fields: [productId], references: [id])
+
+  owner User? @relation(fields: [ownerId], references: [id])
+
+  ownershipHistory OwnershipHistory[]
+
+  warranty Warranty?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model OwnershipHistory {
+  id String @id @default(cuid())
+
+  passportId String
+
+  previousOwner String?
+
+  newOwner String
+
+  transferDate DateTime @default(now())
+
+  passport DigitalLuxuryPassport @relation(fields: [passportId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Warranty {
+  id String @id @default(cuid())
+
+  passportId String @unique
+
+  provider String
+
+  startDate DateTime
+
+  endDate DateTime
+
+  active Boolean @default(true)
+
+  passport DigitalLuxuryPassport @relation(fields: [passportId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum PassportStatus {
+  PENDING
+  AUTHENTIC
+  REVOKED
+  EXPIRED
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  userId String?
+
+  entity String
+
+  entityId String
+
+  action String
+
+  oldValue Json?
+
+  newValue Json?
+
+  ipAddress String?
+
+  userAgent String?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([entity])
+  @@index([entityId])
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model FeatureFlag {
+  id String @id @default(cuid())
+
+  name String @unique
+
+  description String?
+
+  enabled Boolean @default(false)
+
+  rollout Int @default(100)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model WebhookEndpoint {
+  id String @id @default(cuid())
+
+  brandId String?
+
+  name String
+
+  url String
+
+  secret String
+
+  enabled Boolean @default(true)
+
+  lastSuccessAt DateTime?
+
+  lastFailureAt DateTime?
+
+  brand Brand? @relation(fields: [brandId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}

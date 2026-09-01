@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 import Button from "@/components/ui/Button";
@@ -26,21 +26,31 @@ export default function LoginForm() {
     setError("");
 
     const result = await signIn("credentials", {
-  email,
-  password,
-  redirect: false,
-  callbackUrl: "/admin",
-});
+      email,
+      password,
+      redirect: false,
+    });
 
-setLoading(false);
+    if (result?.error) {
+      setLoading(false);
+      setError("Invalid email or password.");
+      return;
+    }
 
-if (result?.error) {
-  setError("Invalid email or password.");
-  return;
-}
+    const session = await getSession();
 
-router.push(result?.url ?? "/admin");
-router.refresh();
+    setLoading(false);
+
+    const role = (session?.user as { role?: string })?.role;
+
+    if (role === "ADMIN") {
+      router.push("/admin");
+      router.refresh();
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (

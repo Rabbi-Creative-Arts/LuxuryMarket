@@ -5,6 +5,17 @@ import { hero } from "@/data/homepage";
 export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+      {/* Partner Entry Point */}
+      <div className="absolute left-6 top-6 z-10 md:left-10 md:top-8">
+        <Link
+          href="/partners/apply"
+          className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-medium text-white backdrop-blur transition hover:border-white/40 hover:bg-white/10"
+        >
+          Partner with UdoLuxury
+          <span className="ml-2">→</span>
+        </Link>
+      </div>
+
       <div className="mx-auto flex min-h-[700px] max-w-7xl flex-col items-center justify-center px-6 py-24 text-center">
         <span className="mb-6 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-medium">
           Premium Global Marketplace
@@ -24,13 +35,6 @@ export default function Hero() {
             className="rounded-xl bg-white px-8 py-4 text-lg font-semibold text-black transition hover:scale-105"
           >
             {hero.primaryButton}
-          </Link>
-
-          <Link
-            href="/brands/register"
-            className="rounded-xl border border-white px-8 py-4 text-lg font-semibold transition hover:bg-white hover:text-black"
-          >
-            {hero.secondaryButton}
           </Link>
         </div>
 
@@ -53,7 +57,6 @@ export default function Hero() {
             <h2 className="text-4xl font-bold">100+</h2>
             <p className="mt-2 text-gray-300">
               Verified Brands
-
             </p>
           </div>
 

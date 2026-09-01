@@ -1,10 +1,8 @@
 import "dotenv/config";
 
-import { PrismaClient, UserRole } from "../src/generated/prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
-
-console.log("DATABASE_URL =", process.env.DATABASE_URL);
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -30,7 +28,7 @@ async function main() {
   });
 
   if (existing) {
-    console.log("✅ Admin already exists.");
+    console.log("Admin already exists.");
     return;
   }
 

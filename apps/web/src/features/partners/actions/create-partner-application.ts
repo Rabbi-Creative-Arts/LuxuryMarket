@@ -1,14 +1,65 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { PartnerType } from "@prisma/client";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function createPartnerApplication(
   formData: FormData
 ) {
   // ============================================
-  // Basic Information
+  // REQUIRE LOGGED-IN USER
+  // ============================================
+
+  const session = await auth();
+
+  if (!session?.user) {
+    throw new Error(
+      "You must be logged in before submitting a Brand application."
+    );
+  }
+
+  const user = session.user as {
+    id?: string;
+    email?: string | null;
+  };
+
+  if (!user.id) {
+    throw new Error(
+      "Your account could not be identified. Please log in again."
+    );
+  }
+
+  if (!user.email) {
+    throw new Error(
+      "Your UdoLuxury account does not have a valid email address."
+    );
+  }
+
+  // ============================================
+  // ACCOUNT EMAIL
+  //
+  // The authenticated UdoLuxury account is the
+  // source of truth.
+  // ============================================
+
+  const accountEmail =
+    user.email.trim().toLowerCase();
+
+  const emailPattern =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailPattern.test(accountEmail)) {
+    throw new Error(
+      "Your UdoLuxury account has an invalid email address."
+    );
+  }
+
+  // ============================================
+  // BASIC INFORMATION
   // ============================================
 
   const businessName =
@@ -23,13 +74,6 @@ export async function createPartnerApplication(
       ?.toString()
       .trim() ?? "";
 
-  const email =
-    formData
-      .get("email")
-      ?.toString()
-      .trim()
-      .toLowerCase() ?? "";
-
   const phone =
     formData
       .get("phone")
@@ -37,7 +81,7 @@ export async function createPartnerApplication(
       .trim() ?? "";
 
   // ============================================
-  // Owner
+  // OWNER
   // ============================================
 
   const firstName =
@@ -59,7 +103,7 @@ export async function createPartnerApplication(
       .trim() ?? "";
 
   // ============================================
-  // Brand
+  // BRAND
   // ============================================
 
   const website =
@@ -81,7 +125,7 @@ export async function createPartnerApplication(
       .trim() ?? "";
 
   // ============================================
-  // Location
+  // LOCATION
   // ============================================
 
   const country =
@@ -97,7 +141,7 @@ export async function createPartnerApplication(
       .trim() ?? "";
 
   // ============================================
-  // Partner Type
+  // BRAND TYPE
   // ============================================
 
   const partnerTypeValue =
@@ -108,8 +152,15 @@ export async function createPartnerApplication(
       .toUpperCase() ?? "";
 
   // ============================================
-  // Popular Brand Fields
+  // POPULAR BRAND FIELDS
   // ============================================
+
+  const companyEmail =
+    formData
+      .get("companyEmail")
+      ?.toString()
+      .trim()
+      .toLowerCase() ?? "";
 
   const purchaseUrl =
     formData
@@ -130,7 +181,20 @@ export async function createPartnerApplication(
       .trim() ?? "";
 
   // ============================================
-  // Validation
+  // BRAND TYPE VALIDATION
+  // ============================================
+
+  if (
+    partnerTypeValue !== "PERSONAL" &&
+    partnerTypeValue !== "POPULAR"
+  ) {
+    throw new Error(
+      "Invalid Brand type."
+    );
+  }
+
+  // ============================================
+  // BASIC VALIDATION
   // ============================================
 
   if (!businessName) {
@@ -142,12 +206,6 @@ export async function createPartnerApplication(
   if (!brandName) {
     throw new Error(
       "Brand name is required."
-    );
-  }
-
-  if (!email) {
-    throw new Error(
-      "Email address is required."
     );
   }
 
@@ -193,41 +251,34 @@ export async function createPartnerApplication(
     );
   }
 
+  // ============================================
+  // POPULAR BRAND VALIDATION
+  // ============================================
+
   if (
-    partnerTypeValue !== "PERSONAL" &&
-    partnerTypeValue !== "POPULAR"
+    partnerTypeValue === "POPULAR" &&
+    !companyEmail
   ) {
     throw new Error(
-      "Invalid partner type."
+      "Official company email is required for Popular Brands."
     );
   }
 
-  // ============================================
-  // Email Validation
-  //
-  // Personal emails are intentionally allowed.
-  // Gmail, Yahoo, Outlook, iCloud, etc. are valid.
-  // ============================================
-
-  const emailPattern =
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!emailPattern.test(email)) {
+  if (
+    partnerTypeValue === "POPULAR" &&
+    !emailPattern.test(companyEmail)
+  ) {
     throw new Error(
-      "Please enter a valid email address."
+      "Please enter a valid official company email."
     );
   }
-
-  // ============================================
-  // Popular Brand Validation
-  // ============================================
 
   if (
     partnerTypeValue === "POPULAR" &&
     !website
   ) {
     throw new Error(
-      "Official brand website is required for Major / Popular Brands."
+      "Official Brand website is required for Popular Brands."
     );
   }
 
@@ -236,58 +287,132 @@ export async function createPartnerApplication(
     !purchaseUrl
   ) {
     throw new Error(
-      "Official purchase URL is required for Major / Popular Brands."
+      "Official purchase URL is required for Popular Brands."
     );
   }
 
   // ============================================
-  // Create Application
+  // PERSONAL BRANDS
+  //
+  // No separate company email.
   // ============================================
 
-  await prisma.partnerApplication.create({
-    data: {
-      partnerType:
-        partnerTypeValue === "PERSONAL"
-          ? PartnerType.PERSONAL
-          : PartnerType.POPULAR,
+  const finalCompanyEmail =
+    partnerTypeValue === "POPULAR"
+      ? companyEmail
+      : null;
 
-      businessName,
+  // ============================================
+  // PREVENT DUPLICATE ACTIVE APPLICATIONS
+  // ============================================
 
-      brandName,
+  const existingApplication =
+    await prisma.partnerApplication.findFirst({
+      where: {
+        userId: user.id,
 
-      email,
+        status: {
+          in: [
+            "PENDING",
+            "UNDER_REVIEW",
+            "APPROVED",
+          ],
+        },
+      },
 
-      phone,
+      orderBy: {
+        submittedAt: "desc",
+      },
+    });
 
-      firstName,
+  if (existingApplication) {
+    throw new Error(
+      "You already have an active Brand application."
+    );
+  }
 
-      lastName,
+  // ============================================
+  // CREATE APPLICATION
+  // ============================================
 
-      position:
-        position || null,
+  const application =
+    await prisma.partnerApplication.create({
+      data: {
+        // Authenticated UdoLuxury account
+        userId: user.id,
 
-      website:
-        website || null,
+        // Automatically use account email
+        email: accountEmail,
 
-      description,
+        // Popular = company email
+        // Personal = null
+        companyEmail:
+          finalCompanyEmail,
 
-      productType,
+        partnerType:
+          partnerTypeValue === "PERSONAL"
+            ? PartnerType.PERSONAL
+            : PartnerType.POPULAR,
 
-      country,
+        businessName,
 
-      city,
+        brandName,
 
-      purchaseUrl:
-        purchaseUrl || null,
+        phone,
 
-      affiliateNetwork:
-        affiliateNetwork || null,
+        firstName,
 
-      commissionInformation:
-        commissionInformation || null,
+        lastName,
 
-      status:
-        "PENDING",
-    },
-  });
+        position:
+          position || null,
+
+        website:
+          website || null,
+
+        description,
+
+        productType,
+
+        country,
+
+        city,
+
+        purchaseUrl:
+          purchaseUrl || null,
+
+        affiliateNetwork:
+          affiliateNetwork || null,
+
+        commissionInformation:
+          commissionInformation || null,
+
+        status: "PENDING",
+      },
+    });
+
+  // ============================================
+  // REFRESH APPLICATION DATA
+  // ============================================
+
+  revalidatePath(
+    "/admin/partners/applications"
+  );
+
+  revalidatePath("/admin");
+
+  revalidatePath("/dashboard");
+
+  // ============================================
+  // REDIRECT APPLICANT
+  // ============================================
+
+  const applicationType =
+    partnerTypeValue === "POPULAR"
+      ? "popular"
+      : "personal";
+
+  redirect(
+    `/partners/apply/success?type=${applicationType}&id=${application.id}`
+  );
 }

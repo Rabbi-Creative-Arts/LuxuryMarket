@@ -1,12 +1,21 @@
 import Link from "next/link";
+
+import { auth } from "@/auth";
 import { createPartnerApplication } from "@/features/partners/actions/create-partner-application";
 
-export default function PopularBrandApplicationPage() {
+export default async function PopularBrandApplicationPage() {
+  const session = await auth();
+
+  const accountEmail =
+    session?.user?.email ?? "";
+
   return (
     <main className="min-h-screen bg-white">
       <div className="mx-auto max-w-4xl px-6 py-16">
 
-        {/* Header */}
+        {/* ============================================
+            Header
+        ============================================ */}
 
         <div className="mb-10">
 
@@ -34,16 +43,66 @@ export default function PopularBrandApplicationPage() {
 
         </div>
 
-        {/* Application Form */}
+        {/* ============================================
+            Application Form
+        ============================================ */}
 
         <form
           action={createPartnerApplication}
           className="space-y-10 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm"
         >
 
-          {/* Business Information */}
+          {/* ============================================
+              UdoLuxury Account
+          ============================================ */}
 
           <section>
+
+            <h2 className="text-2xl font-bold">
+              UdoLuxury Account
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Your application is connected to your UdoLuxury account.
+            </p>
+
+            <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5">
+
+              <div className="flex items-start gap-3">
+
+                <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
+                  ✓
+                </div>
+
+                <div>
+
+                  <p className="font-semibold">
+                    Account Email
+                  </p>
+
+                  <p className="mt-1 text-sm text-gray-700">
+                    {accountEmail}
+                  </p>
+
+                  <p className="mt-2 text-sm leading-6 text-gray-500">
+                    This is the email address you used to create your
+                    UdoLuxury account. It identifies you as the applicant
+                    and will automatically be attached to this application.
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* ============================================
+              Business Information
+          ============================================ */}
+
+          <section className="border-t border-gray-200 pt-10">
 
             <h2 className="text-2xl font-bold">
               Business Information
@@ -55,7 +114,10 @@ export default function PopularBrandApplicationPage() {
 
             <div className="mt-6 grid gap-6 md:grid-cols-2">
 
+              {/* Business Name */}
+
               <div>
+
                 <label
                   htmlFor="businessName"
                   className="mb-2 block text-sm font-medium"
@@ -71,9 +133,13 @@ export default function PopularBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="Company name"
                 />
+
               </div>
 
+              {/* Brand Name */}
+
               <div>
+
                 <label
                   htmlFor="brandName"
                   className="mb-2 block text-sm font-medium"
@@ -89,27 +155,42 @@ export default function PopularBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="Brand name"
                 />
+
               </div>
 
-              <div>
+              {/* Official Company Email */}
+
+              <div className="md:col-span-2">
+
                 <label
-                  htmlFor="businessEmail"
+                  htmlFor="companyEmail"
                   className="mb-2 block text-sm font-medium"
                 >
-                  Business Email *
+                  Official Company Email *
                 </label>
 
                 <input
-                  id="businessEmail"
-                  name="businessEmail"
+                  id="companyEmail"
+                  name="companyEmail"
                   type="email"
                   required
+                  autoComplete="organization"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
-                  placeholder="business@example.com"
+                  placeholder="name@company.com"
                 />
+
+                <p className="mt-2 text-sm leading-6 text-gray-500">
+                  This must be an official email address associated with
+                  the company or brand you are representing. Your
+                  UdoLuxury account email is recorded separately.
+                </p>
+
               </div>
 
+              {/* Phone */}
+
               <div>
+
                 <label
                   htmlFor="phone"
                   className="mb-2 block text-sm font-medium"
@@ -122,16 +203,20 @@ export default function PopularBrandApplicationPage() {
                   name="phone"
                   type="tel"
                   required
+                  autoComplete="tel"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="+234..."
                 />
+
               </div>
 
             </div>
 
           </section>
 
-          {/* Contact Information */}
+          {/* ============================================
+              Authorized Contact
+          ============================================ */}
 
           <section className="border-t border-gray-200 pt-10">
 
@@ -145,7 +230,10 @@ export default function PopularBrandApplicationPage() {
 
             <div className="mt-6 grid gap-6 md:grid-cols-2">
 
+              {/* First Name */}
+
               <div>
+
                 <label
                   htmlFor="firstName"
                   className="mb-2 block text-sm font-medium"
@@ -158,11 +246,16 @@ export default function PopularBrandApplicationPage() {
                   name="firstName"
                   type="text"
                   required
+                  autoComplete="given-name"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                 />
+
               </div>
 
+              {/* Last Name */}
+
               <div>
+
                 <label
                   htmlFor="lastName"
                   className="mb-2 block text-sm font-medium"
@@ -175,11 +268,16 @@ export default function PopularBrandApplicationPage() {
                   name="lastName"
                   type="text"
                   required
+                  autoComplete="family-name"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                 />
+
               </div>
 
+              {/* Position */}
+
               <div className="md:col-span-2">
+
                 <label
                   htmlFor="position"
                   className="mb-2 block text-sm font-medium"
@@ -194,13 +292,16 @@ export default function PopularBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="e.g. Founder, Director, Brand Manager"
                 />
+
               </div>
 
             </div>
 
           </section>
 
-          {/* Brand Information */}
+          {/* ============================================
+              Brand Information
+          ============================================ */}
 
           <section className="border-t border-gray-200 pt-10">
 
@@ -210,7 +311,10 @@ export default function PopularBrandApplicationPage() {
 
             <div className="mt-6 space-y-6">
 
+              {/* Official Website */}
+
               <div>
+
                 <label
                   htmlFor="website"
                   className="mb-2 block text-sm font-medium"
@@ -226,9 +330,13 @@ export default function PopularBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="https://www.example.com"
                 />
+
               </div>
 
+              {/* Description */}
+
               <div>
+
                 <label
                   htmlFor="description"
                   className="mb-2 block text-sm font-medium"
@@ -244,9 +352,13 @@ export default function PopularBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="Tell us about your brand, products, history and market presence."
                 />
+
               </div>
 
+              {/* Product Categories */}
+
               <div>
+
                 <label
                   htmlFor="productType"
                   className="mb-2 block text-sm font-medium"
@@ -262,13 +374,16 @@ export default function PopularBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="e.g. Watches, Fashion, Jewelry, Beauty"
                 />
+
               </div>
 
             </div>
 
           </section>
 
-          {/* Official Purchase Information */}
+          {/* ============================================
+              Official Purchase Information
+          ============================================ */}
 
           <section className="border-t border-gray-200 pt-10">
 
@@ -285,7 +400,10 @@ export default function PopularBrandApplicationPage() {
 
             <div className="mt-6 space-y-6">
 
+              {/* Purchase URL */}
+
               <div>
+
                 <label
                   htmlFor="purchaseUrl"
                   className="mb-2 block text-sm font-medium"
@@ -301,9 +419,13 @@ export default function PopularBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="https://www.example.com/shop"
                 />
+
               </div>
 
+              {/* Affiliate Network */}
+
               <div>
+
                 <label
                   htmlFor="affiliateNetwork"
                   className="mb-2 block text-sm font-medium"
@@ -318,9 +440,13 @@ export default function PopularBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="Affiliate network name, if applicable"
                 />
+
               </div>
 
+              {/* Commission Information */}
+
               <div>
+
                 <label
                   htmlFor="commissionInformation"
                   className="mb-2 block text-sm font-medium"
@@ -335,13 +461,16 @@ export default function PopularBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="Describe your affiliate or commission arrangement, if already established."
                 />
+
               </div>
 
             </div>
 
           </section>
 
-          {/* Business Location */}
+          {/* ============================================
+              Business Location
+          ============================================ */}
 
           <section className="border-t border-gray-200 pt-10">
 
@@ -351,7 +480,10 @@ export default function PopularBrandApplicationPage() {
 
             <div className="mt-6 grid gap-6 md:grid-cols-2">
 
+              {/* Country */}
+
               <div>
+
                 <label
                   htmlFor="country"
                   className="mb-2 block text-sm font-medium"
@@ -365,11 +497,16 @@ export default function PopularBrandApplicationPage() {
                   type="text"
                   required
                   defaultValue="Nigeria"
+                  autoComplete="country-name"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                 />
+
               </div>
 
+              {/* City */}
+
               <div>
+
                 <label
                   htmlFor="city"
                   className="mb-2 block text-sm font-medium"
@@ -382,15 +519,19 @@ export default function PopularBrandApplicationPage() {
                   name="city"
                   type="text"
                   required
+                  autoComplete="address-level2"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                 />
+
               </div>
 
             </div>
 
           </section>
 
-          {/* Partner Type */}
+          {/* ============================================
+              Partner Type
+          ============================================ */}
 
           <section className="border-t border-gray-200 pt-10">
 
@@ -422,7 +563,45 @@ export default function PopularBrandApplicationPage() {
 
           </section>
 
-          {/* Agreement */}
+          {/* ============================================
+              Email Separation Notice
+          ============================================ */}
+
+          <section className="border-t border-gray-200 pt-10">
+
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
+
+              <h2 className="font-semibold">
+                Two Emails, Two Purposes
+              </h2>
+
+              <div className="mt-4 space-y-3 text-sm leading-6 text-gray-600">
+
+                <p>
+                  <strong>UdoLuxury Account Email:</strong>{" "}
+                  {accountEmail}
+                </p>
+
+                <p>
+                  This identifies your UdoLuxury account and is
+                  automatically attached to your application.
+                </p>
+
+                <p>
+                  <strong>Official Company Email:</strong>{" "}
+                  The company email you entered above identifies the
+                  established Brand you are representing.
+                </p>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* ============================================
+              Agreement
+          ============================================ */}
 
           <section className="border-t border-gray-200 pt-10">
 
@@ -437,16 +616,19 @@ export default function PopularBrandApplicationPage() {
 
               <span className="text-sm leading-6 text-gray-600">
                 I confirm that I am authorized to submit this
-                application and that the information provided is
-                accurate. I understand that UdoLuxury will review
-                and verify the brand before approval.
+                application on behalf of the Brand and that the
+                information provided is accurate. I understand that
+                UdoLuxury will review and verify the Brand before
+                approval.
               </span>
 
             </label>
 
           </section>
 
-          {/* Submit */}
+          {/* ============================================
+              Submit
+          ============================================ */}
 
           <div className="border-t border-gray-200 pt-8">
 

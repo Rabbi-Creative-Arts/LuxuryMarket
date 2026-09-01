@@ -1,8 +1,14 @@
 import Link from "next/link";
 
+import { auth } from "@/auth";
 import { createPartnerApplication } from "@/features/partners/actions/create-partner-application";
 
-export default function PersonalBrandApplicationPage() {
+export default async function PersonalBrandApplicationPage() {
+  const session = await auth();
+
+  const accountEmail =
+    session?.user?.email ?? "";
+
   return (
     <main className="min-h-screen bg-white">
       <div className="mx-auto max-w-4xl px-6 py-16">
@@ -38,7 +44,7 @@ export default function PersonalBrandApplicationPage() {
 
         {/* ============================================
             Application Form
-            ============================================ */}
+        ============================================ */}
 
         <form
           action={createPartnerApplication}
@@ -46,10 +52,56 @@ export default function PersonalBrandApplicationPage() {
         >
 
           {/* ============================================
-              Business Information
+              UdoLuxury Account
           ============================================ */}
 
           <section>
+
+            <h2 className="text-2xl font-bold">
+              UdoLuxury Account
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Your application is connected to your UdoLuxury account.
+            </p>
+
+            <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5">
+
+              <div className="flex items-start gap-3">
+
+                <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
+                  ✓
+                </div>
+
+                <div>
+
+                  <p className="font-semibold">
+                    Account Email
+                  </p>
+
+                  <p className="mt-1 text-sm text-gray-700">
+                    {accountEmail}
+                  </p>
+
+                  <p className="mt-2 text-sm leading-6 text-gray-500">
+                    This is the email address you used to create your
+                    UdoLuxury account. It will automatically be attached
+                    to this application.
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* ============================================
+              Business Information
+          ============================================ */}
+
+          <section className="border-t border-gray-200 pt-10">
 
             <h2 className="text-2xl font-bold">
               Business Information
@@ -102,35 +154,6 @@ export default function PersonalBrandApplicationPage() {
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
                   placeholder="Your brand name"
                 />
-
-              </div>
-
-              {/* Personal Email */}
-
-              <div>
-
-                <label
-                  htmlFor="email"
-                  className="mb-2 block text-sm font-medium"
-                >
-                  Personal Email Address *
-                </label>
-
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
-                  placeholder="you@gmail.com"
-                />
-
-                <p className="mt-2 text-sm leading-6 text-gray-500">
-                  Personal email addresses are accepted. You may use
-                  Gmail, Yahoo, Outlook, Hotmail, iCloud, or another
-                  valid email address.
-                </p>
 
               </div>
 
@@ -217,6 +240,27 @@ export default function PersonalBrandApplicationPage() {
                   required
                   autoComplete="family-name"
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                />
+
+              </div>
+
+              {/* Position */}
+
+              <div className="md:col-span-2">
+
+                <label
+                  htmlFor="position"
+                  className="mb-2 block text-sm font-medium"
+                >
+                  Position / Role
+                </label>
+
+                <input
+                  id="position"
+                  name="position"
+                  type="text"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                  placeholder="e.g. Founder, Owner, Director"
                 />
 
               </div>
@@ -420,14 +464,12 @@ export default function PersonalBrandApplicationPage() {
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
 
               <h2 className="font-semibold">
-                Personal Email Accepted
+                Account Email Used for Your Application
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-gray-600">
-                You do not need a company-domain email address to
-                apply as a Personal Brand. A valid personal email
-                address can be used for your application and
-                communication with UdoLuxury.
+                Your UdoLuxury login email is automatically attached to
+                this application. You do not need to enter it again.
               </p>
 
               <p className="mt-3 text-sm leading-6 text-gray-600">

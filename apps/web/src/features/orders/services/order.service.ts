@@ -27,20 +27,18 @@ export class OrderService {
       // Get Cart
       // ========================================
 
-      const cart =
-        await tx.cart.findUnique({
-          where: {
-            userId,
-          },
-
-          include: {
-            items: {
-              include: {
-                product: true,
-              },
+      const cart = await tx.cart.findUnique({
+        where: {
+          userId,
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
             },
           },
-        });
+        },
+      });
 
       if (!cart) {
         throw new Error(
@@ -59,10 +57,7 @@ export class OrderService {
       // ========================================
 
       for (const item of cart.items) {
-        if (
-          item.product.status !==
-          "ACTIVE"
-        ) {
+        if (item.product.status !== "ACTIVE") {
           throw new Error(
             `The product "${item.product.name}" is no longer available.`
           );
@@ -73,34 +68,25 @@ export class OrderService {
       // Calculate Subtotal
       // ========================================
 
-      let subtotal =
-        new Prisma.Decimal(0);
+      let subtotal = new Prisma.Decimal(0);
 
       for (const item of cart.items) {
-        const lineTotal =
-          new Prisma.Decimal(
-            item.product.price
-          ).mul(item.quantity);
+        const lineTotal = new Prisma.Decimal(
+          item.product.price
+        ).mul(item.quantity);
 
-        subtotal =
-          subtotal.add(lineTotal);
+        subtotal = subtotal.add(lineTotal);
       }
 
       // ========================================
       // Checkout Foundation
-      //
-      // Shipping, tax and discount will be
-      // calculated by their own systems later.
       // ========================================
 
-      const shipping =
-        new Prisma.Decimal(0);
+      const shipping = new Prisma.Decimal(0);
 
-      const tax =
-        new Prisma.Decimal(0);
+      const tax = new Prisma.Decimal(0);
 
-      const discount =
-        new Prisma.Decimal(0);
+      const discount = new Prisma.Decimal(0);
 
       const total = subtotal
         .add(shipping)
@@ -108,48 +94,83 @@ export class OrderService {
         .sub(discount);
 
       // ========================================
+      // Get Current Marketplace Commission
+      // ========================================
+
+      const marketplaceSettings =
+        await tx.marketplaceSettings.findFirst({
+          where: {
+            active: true,
+          },
+          orderBy: {
+            updatedAt: "desc",
+          },
+        });
+
+      const marketplaceCommissionRate =
+        marketplaceSettings
+          ? new Prisma.Decimal(
+              marketplaceSettings.commissionRate
+            )
+          : new Prisma.Decimal(0);
+
+      // ========================================
+      // Calculate Marketplace Commission
+      //
+      // IMPORTANT:
+      // The current Admin rate is SNAPSHOTTED
+      // onto this order.
+      //
+      // Example:
+      // ₦100,000 × 3% = ₦3,000
+      // ========================================
+
+      const marketplaceCommissionAmount =
+        total
+          .mul(marketplaceCommissionRate)
+          .div(100);
+
+      // ========================================
       // Create Shipping Address
       // ========================================
 
-      const address =
-        await tx.address.create({
-          data: {
-            userId,
+      const address = await tx.address.create({
+        data: {
+          userId,
 
-            firstName:
-              data.firstName,
+          firstName:
+            data.firstName,
 
-            lastName:
-              data.lastName,
+          lastName:
+            data.lastName,
 
-            company:
-              data.company || null,
+          company:
+            data.company || null,
 
-            phone:
-              data.phone,
+          phone:
+            data.phone,
 
-            addressLine1:
-              data.addressLine1,
+          addressLine1:
+            data.addressLine1,
 
-            addressLine2:
-              data.addressLine2 ||
-              null,
+          addressLine2:
+            data.addressLine2 || null,
 
-            city:
-              data.city,
+          city:
+            data.city,
 
-            state:
-              data.state,
+          state:
+            data.state,
 
-            postalCode:
-              data.postalCode,
+          postalCode:
+            data.postalCode,
 
-            country:
-              data.country,
+          country:
+            data.country,
 
-            isDefault: false,
-          },
-        });
+          isDefault: false,
+        },
+      });
 
       // ========================================
       // Generate Order Number
@@ -166,62 +187,69 @@ export class OrderService {
       // Create Order
       // ========================================
 
-      const order =
-        await tx.order.create({
-          data: {
-            orderNumber,
+      const order = await tx.order.create({
+        data: {
+          orderNumber,
 
-            userId,
+          userId,
 
-            subtotal,
+          subtotal,
 
-            shipping,
+          shipping,
 
-            tax,
+          tax,
 
-            discount,
+          discount,
 
-            total,
+          total,
 
-            status: "PENDING",
+          // ====================================
+          // Marketplace Commission Snapshot
+          // ====================================
 
-            paymentStatus:
-              "PENDING",
+          marketplaceCommissionRate,
 
-            items: {
-              create: cart.items.map(
-                (item) => {
-                  const unitPrice =
-                    new Prisma.Decimal(
-                      item.product.price
-                    );
+          marketplaceCommissionAmount,
 
-                  const itemTotal =
-                    unitPrice.mul(
-                      item.quantity
-                    );
+          status: "PENDING",
 
-                  return {
-                    productId:
-                      item.productId,
+          paymentStatus:
+            "PENDING",
 
-                    quantity:
-                      item.quantity,
+          items: {
+            create: cart.items.map(
+              (item) => {
+                const unitPrice =
+                  new Prisma.Decimal(
+                    item.product.price
+                  );
 
-                    unitPrice,
+                const itemTotal =
+                  unitPrice.mul(
+                    item.quantity
+                  );
 
-                    total:
-                      itemTotal,
-                  };
-                }
-              ),
-            },
+                return {
+                  productId:
+                    item.productId,
+
+                  quantity:
+                    item.quantity,
+
+                  unitPrice,
+
+                  total:
+                    itemTotal,
+                };
+              }
+            ),
           },
+        },
 
-          include: {
-            items: true,
-          },
-        });
+        include: {
+          items: true,
+        },
+      });
 
       // ========================================
       // Create Shipment Record
@@ -279,6 +307,7 @@ export class OrderService {
             product: {
               include: {
                 brand: true,
+
                 images: {
                   orderBy: [
                     {

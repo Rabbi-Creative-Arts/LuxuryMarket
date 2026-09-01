@@ -27,4 +27,13 @@ Thumbs.db
 
 # Prisma
 prisma/dev.db
-prisma/dev.db-journal
+prisma/dev.db-journal.venv/
+apps/web-current.zip
+apps/web/Get-Content
+apps/web/build-errors.txt
+apps/web/vendor-cleanup.txt
+apps/web/upgrade-payment-schema.ps1
+package-lock.json
+apps/web/prisma/schema-legacy.prisma
+apps/web/prisma/schema-v2(1).prisma
+apps/web/prisma/schema-v2-payment-upgraded.prisma
