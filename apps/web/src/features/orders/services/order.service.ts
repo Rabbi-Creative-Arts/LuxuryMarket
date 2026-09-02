@@ -1,10 +1,21 @@
 import { Prisma } from "@prisma/client";
 
+import { sellerEarningService } from "@/features/finance/services/seller-earning.service";
+import { buildOrderItemSnapshots } from "@/features/finance/lib/seller-attribution";
+import { toMoney, toRate } from "@/features/finance/lib/money";
+
 import { prisma } from "@/lib/prisma";
 
 export class OrderService {
   // ============================================
   // Create Pending Order From Cart
+  //
+  // Phase 3: in the SAME transaction we now also
+  // snapshot seller attribution + commission onto
+  // every OrderItem and recognize seller earnings
+  // with balanced, idempotent ledger postings.
+  // Checkout itself is unchanged — the financial
+  // recognition rides along inside createFromCart.
   // ============================================
 
   async createFromCart(
@@ -24,7 +35,8 @@ export class OrderService {
   ) {
     return prisma.$transaction(async (tx) => {
       // ========================================
-      // Get Cart
+      // Get Cart (with product + brand for the
+      // seller attribution snapshot)
       // ========================================
 
       const cart = await tx.cart.findUnique({
@@ -34,7 +46,11 @@ export class OrderService {
         include: {
           items: {
             include: {
-              product: true,
+              product: {
+                include: {
+                  brand: true,
+                },
+              },
             },
           },
         },
@@ -65,36 +81,12 @@ export class OrderService {
       }
 
       // ========================================
-      // Calculate Subtotal
-      // ========================================
-
-      let subtotal = new Prisma.Decimal(0);
-
-      for (const item of cart.items) {
-        const lineTotal = new Prisma.Decimal(
-          item.product.price
-        ).mul(item.quantity);
-
-        subtotal = subtotal.add(lineTotal);
-      }
-
-      // ========================================
-      // Checkout Foundation
-      // ========================================
-
-      const shipping = new Prisma.Decimal(0);
-
-      const tax = new Prisma.Decimal(0);
-
-      const discount = new Prisma.Decimal(0);
-
-      const total = subtotal
-        .add(shipping)
-        .add(tax)
-        .sub(discount);
-
-      // ========================================
       // Get Current Marketplace Commission
+      //
+      // The Admin-configured rate is snapshotted
+      // onto EVERY OrderItem and onto the order
+      // header, so historical records never
+      // depend on later settings changes.
       // ========================================
 
       const marketplaceSettings =
@@ -107,28 +99,67 @@ export class OrderService {
           },
         });
 
-      const marketplaceCommissionRate =
+      const marketplaceCommissionRate = toRate(
         marketplaceSettings
-          ? new Prisma.Decimal(
-              marketplaceSettings.commissionRate
-            )
-          : new Prisma.Decimal(0);
+          ? marketplaceSettings.commissionRate
+          : 0
+      );
 
       // ========================================
-      // Calculate Marketplace Commission
+      // Build seller attribution snapshots + the
+      // SINGLE authoritative money calculation.
       //
-      // IMPORTANT:
-      // The current Admin rate is SNAPSHOTTED
-      // onto this order.
-      //
-      // Example:
-      // ₦100,000 × 3% = ₦3,000
+      // Line totals, per-item commission and
+      // seller earnings are all derived here via
+      // the finance money module (Decimal). The
+      // order header totals and the ledger
+      // postings consume these SAME values — no
+      // independent re-calculation anywhere.
       // ========================================
 
-      const marketplaceCommissionAmount =
-        total
-          .mul(marketplaceCommissionRate)
-          .div(100);
+      const itemSnapshots = buildOrderItemSnapshots(
+        cart.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          product: {
+            id: item.product.id,
+            price: item.product.price,
+            brand: item.product.brand
+              ? {
+                  id: item.product.brand.id,
+                  name: item.product.brand.name,
+                  ownerId: item.product.brand.ownerId,
+                }
+              : null,
+          },
+        })),
+        marketplaceCommissionRate
+      );
+
+      const subtotal = itemSnapshots.reduce(
+        (acc, snapshot) => acc.plus(snapshot.total),
+        new Prisma.Decimal(0)
+      );
+
+      const totalCommission = itemSnapshots.reduce(
+        (acc, snapshot) => acc.plus(snapshot.commissionAmount),
+        new Prisma.Decimal(0)
+      );
+
+      // ========================================
+      // Checkout Foundation
+      // ========================================
+
+      const shipping = new Prisma.Decimal(0);
+
+      const tax = new Prisma.Decimal(0);
+
+      const discount = new Prisma.Decimal(0);
+
+      const total = subtotal
+        .plus(shipping)
+        .plus(tax)
+        .minus(discount);
 
       // ========================================
       // Create Shipping Address
@@ -185,6 +216,11 @@ export class OrderService {
 
       // ========================================
       // Create Order
+      //
+      // Every OrderItem carries the seller
+      // snapshot (brand id/name/user id), the
+      // commission rate actually applied, the
+      // commission amount and the earning amount.
       // ========================================
 
       const order = await tx.order.create({
@@ -193,7 +229,7 @@ export class OrderService {
 
           userId,
 
-          subtotal,
+          subtotal: toMoney(subtotal),
 
           shipping,
 
@@ -201,15 +237,18 @@ export class OrderService {
 
           discount,
 
-          total,
+          total: toMoney(total),
 
           // ====================================
           // Marketplace Commission Snapshot
+          // (order-level aggregate of the
+          // authoritative per-item calculation)
           // ====================================
 
           marketplaceCommissionRate,
 
-          marketplaceCommissionAmount,
+          marketplaceCommissionAmount:
+            toMoney(totalCommission),
 
           status: "PENDING",
 
@@ -217,31 +256,42 @@ export class OrderService {
             "PENDING",
 
           items: {
-            create: cart.items.map(
-              (item) => {
-                const unitPrice =
-                  new Prisma.Decimal(
-                    item.product.price
-                  );
+            create: itemSnapshots.map(
+              (snapshot) => ({
+                productId:
+                  snapshot.productId,
 
-                const itemTotal =
-                  unitPrice.mul(
-                    item.quantity
-                  );
+                quantity:
+                  snapshot.quantity,
 
-                return {
-                  productId:
-                    item.productId,
+                unitPrice:
+                  snapshot.unitPrice,
 
-                  quantity:
-                    item.quantity,
+                total:
+                  snapshot.total,
 
-                  unitPrice,
+                // ============================
+                // Phase 3: seller snapshot
+                // ============================
 
-                  total:
-                    itemTotal,
-                };
-              }
+                sellerBrandId:
+                  snapshot.sellerBrandId,
+
+                sellerBrandName:
+                  snapshot.sellerBrandName,
+
+                sellerUserId:
+                  snapshot.sellerUserId,
+
+                commissionRate:
+                  snapshot.commissionRate,
+
+                commissionAmount:
+                  snapshot.commissionAmount,
+
+                earningAmount:
+                  snapshot.earningAmount,
+              })
             ),
           },
         },
@@ -250,6 +300,38 @@ export class OrderService {
           items: true,
         },
       });
+
+      // ========================================
+      // Phase 3: Recognize seller earnings +
+      // post the balanced settlement ledger
+      // transactions (one per seller), inside
+      // the same DB transaction. Idempotent on
+      // orderItemId and on the transaction
+      // reference, so a retry never double-moves
+      // money.
+      // ========================================
+
+      await sellerEarningService.recognizeForOrder(
+        tx,
+        {
+          orderId: order.id,
+
+          items: order.items
+            .filter(
+              (item) => item.sellerBrandId !== null
+            )
+            .map((item) => ({
+              orderItemId: item.id,
+              sellerBrandId: item.sellerBrandId as string,
+              sellerBrandName: item.sellerBrandName as string,
+              sellerUserId: item.sellerUserId,
+              grossAmount: item.total,
+              commissionRate: item.commissionRate,
+            })),
+
+          createdBy: userId,
+        }
+      );
 
       // ========================================
       // Create Shipment Record
@@ -334,6 +416,8 @@ export class OrderService {
         },
 
         payments: true,
+
+        earnings: true,
       },
     });
   }

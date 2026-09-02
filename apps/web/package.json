@@ -7,6 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prisma:validate": "node scripts/prisma-validate.mjs",
+    "verify:migration": "node scripts/verify-migration.mjs",
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
@@ -27,16 +32,20 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@prisma/prisma-schema-wasm": "7.9.0-1.e922089b7d7502aff4249d5da3420f6fa55fc6ad",
+    "@prisma/schema-engine-wasm": "7.9.0-1.e922089b7d7502aff4249d5da3420f6fa55fc6ad",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   },
   "allowScripts": {
     "@prisma/engines@7.9.0": true,
